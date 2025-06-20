@@ -1,9 +1,8 @@
-﻿jax==0.4.34
+flask==2.3.3
+scikit-learn==1.4.2
+numpy==1.26.4
+jax==0.4.34
 jaxlib==0.4.34
 ml_dtypes==0.5.1
 opt_einsum==3.4.0
 scipy==1.15.3
-flask==2.3.3
-scikit-learn==1.4.2
-pandas==2.2.2
-numpy==2.2.0
