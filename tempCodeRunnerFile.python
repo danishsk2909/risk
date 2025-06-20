@@ -1,0 +1,44 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+import pickle
+
+# 1. Load dataset
+df = pd.read_csv("Telco-Customer-Churn.csv")
+
+# 2. Clean and prepare data
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+df.dropna(inplace=True)
+
+# 3. Define target and features
+target = 'Churn'  # assuming this is the column to predict
+numerical_features = ['tenure', 'MonthlyCharges', 'TotalCharges']
+categorical_features = ['Contract', 'TechSupport', 'OnlineSecurity', 'InternetService',
+                        'PaymentMethod', 'DeviceProtection',
+                        'OnlineBackup', 'StreamingMovies', 'StreamingTV']
+features = numerical_features + categorical_features
+
+X = df[features].copy()
+y = df[target].apply(lambda x: 1 if x == 'Yes' else 0)  # Encode target (Yes=1, No=0)
+
+# 4. Encode categorical variables
+label_encoders = {}
+for col in categorical_features:
+    le = LabelEncoder()
+    X[col] = le.fit_transform(X[col].astype(str))
+    label_encoders[col] = le  # Optional: store encoders for reuse
+
+# 5. Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 6. Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# 7. Save model to .pkl
+with open("RFC_Model.pkl", "wb") as file:
+    pickle.dump(model, file)
+
+print("✅ Model saved successfully as RFC_Model.pkl")
