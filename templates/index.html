@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churn Risk Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #ffecd2, #fcb69f);
+            padding: 30px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: linear-gradient(to bottom right, #ffffff, #f0f8ff);
+            padding: 40px 35px;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 32px;
+            color: #6a1b9a;
+        }
+
+        h3 {
+            color: #1e88e5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background-color: #fefefe;
+            transition: all 0.3s ease-in-out;
+        }
+
+        select:focus, input:focus {
+            border-color: #8e24aa;
+            box-shadow: 0 0 8px rgba(142, 36, 170, 0.3);
+            outline: none;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            background: linear-gradient(to right, #8e2de2, #4a00e0);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 17px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background: linear-gradient(to right, #4a00e0, #8e2de2);
+        }
+
+        .results, .lime-container {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(to right, #d7d2cc, #304352);
+            color: white;
+            border-radius: 14px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        .results h3, .lime-container h3 {
+            color: #fff176;
+        }
+
+        .high {
+            color: #ef5350;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: #ffb300;
+            font-weight: bold;
+        }
+
+        .low {
+            color: #66bb6a;
+            font-weight: bold;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .lime-container div {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px dashed #fff9c4;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔮 Customer Churn Risk Predictor</h2>
+
+        <!-- Form Start -->
+        <form method="post" action="/predict">
+
+            {% set fields = [
+                ("Contract", "Contract Type", ["Month-to-month", "One year", "Two year"]),
+                ("TechSupport", "Tech Support", ["No", "Yes", "No internet service"]),
+                ("OnlineSecurity", "Online Security", ["No", "Yes", "No internet service"]),
+                ("InternetService", "Internet Service", ["Fiber optic", "DSL", "No"]),
+                ("PaymentMethod", "Payment Method", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"]),
+                ("DeviceProtection", "Device Protection", ["No", "Yes", "No internet service"]),
+                ("OnlineBackup", "Online Backup", ["No", "Yes", "No internet service"]),
+                ("StreamingMovies", "Streaming Movies", ["No", "Yes", "No internet service"]),
+                ("StreamingTV", "Streaming TV", ["No", "Yes", "No internet service"])
+            ] %}
+
+            <!-- Numeric Fields -->
+            <div class="form-group">
+                <label for="tenure">📅 Tenure (months)</label>
+                <input type="number" id="tenure" name="tenure" min="0" max="120" required>
+            </div>
+
+            <div class="form-group">
+                <label for="MonthlyCharges">💵 Monthly Charges ($)</label>
+                <input type="number" id="MonthlyCharges" name="MonthlyCharges" min="0" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="TotalCharges">💰 Total Charges ($)</label>
+                <input type="number" id="TotalCharges" name="TotalCharges" min="0" step="0.01" required>
+            </div>
+
+            <!-- Dropdown Fields -->
+            {% for name, label, options in fields %}
+                <div class="form-group">
+                    <label for="{{ name }}">🔧 {{ label }}</label>
+                    <select id="{{ name }}" name="{{ name }}" required>
+                        <option value="">Select {{ label }}</option>
+                        {% for opt in options %}
+                            <option value="{{ opt }}">{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endfor %}
+
+            <input type="submit" value="🔍 Predict Risk Score">
+        </form>
+
+        <!-- Results Section -->
+        {% if risk_score is defined %}
+            <div class="results">
+                <h3>🎯 Risk Score: {{ risk_score }}%</h3>
+                <h3>Model-Based Risk Category: <span class="{{ risk_category|lower }}">{{ risk_category }}</span></h3>
+
+                {% if rule_based_category %}
+                    <h3>Rule-Based Risk Category: <span class="{{ rule_based_category|lower }}">{{ rule_based_category }}</span></h3>
+                {% endif %}
+
+                {% if retention_actions %}
+                    <h3>📌 Recommended Retention Actions:</h3>
+                    <ul>
+                        {% for action in retention_actions %}
+                            <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="lime-container">
+                <h3>🧠 LIME Prediction Explanation</h3>
+                <div>
+                    {{ lime_html | safe }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
