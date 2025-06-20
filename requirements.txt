@@ -1,6 +1,6 @@
 flask==2.3.3
 scikit-learn==1.4.2
-numpy==1.26.4
+numpy==2.2.0
 jax==0.4.34
 jaxlib==0.4.34
 ml_dtypes==0.5.1
